@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema Integrado - Comissões, Estoque e Juros</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-brand">
+        <div class="brand-badge">DESAFIOS</div>
+        <div class="brand-info">
+          <h1>Painel Operacional Integrado</h1>
+          <p>Módulos de Comissões Comerciais, Movimentação de Estoque e Cálculo de Juros</p>
+        </div>
+      </div>
+      
+      <div class="header-actions">
+        <!-- Author Profile Mini Card -->
+        <div class="author-header-card">
+          <div class="author-avatar">MF</div>
+          <div class="author-details">
+            <span class="author-byline">Desenvolvido por</span>
+            <strong class="author-name">Marcos Feitosa</strong>
+            <div class="author-links">
+              <a href="mailto:marcosfanjo@gmail.com" class="author-link" title="Enviar E-mail">
+                <span class="link-icon">✉️</span> marcosfanjo@gmail.com
+              </a>
+              <span class="author-separator">•</span>
+              <a href="https://wa.me/5587999323312" target="_blank" rel="noopener noreferrer" class="author-link whatsapp-link" title="Conversar no WhatsApp">
+                <span class="link-icon">💬</span> (87) 9 9932-3312
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Theme Toggle Button -->
+        <button type="button" class="theme-toggle-btn" id="btn-theme-toggle" aria-label="Alternar tema de cor">
+          <span class="theme-icon" id="theme-icon">🌙</span>
+          <span class="theme-label" id="theme-label">Tema Escuro</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs" role="tablist">
+      <button class="tab-btn active" id="tab-btn-comissoes" data-tab="tab-comissoes" role="tab" aria-selected="true">
+        <span class="tab-icon">💰</span>
+        <span class="tab-title">1. Comissões de Vendas</span>
+      </button>
+      <button class="tab-btn" id="tab-btn-estoque" data-tab="tab-estoque" role="tab" aria-selected="false">
+        <span class="tab-icon">📦</span>
+        <span class="tab-title">2. Movimentação de Estoque</span>
+      </button>
+      <button class="tab-btn" id="tab-btn-juros" data-tab="tab-juros" role="tab" aria-selected="false">
+        <span class="tab-icon">📅</span>
+        <span class="tab-title">3. Cálculo de Juros (2,5%/dia)</span>
+      </button>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      
+      <!-- ============================================== -->
+      <!-- TAB 1: COMISSÕES DE VENDAS -->
+      <!-- ============================================== -->
+      <section id="tab-comissoes" class="tab-panel active" role="tabpanel">
+        <div class="section-intro">
+          <div class="intro-text">
+            <h2>Cálculo de Comissão da Equipe Comercial</h2>
+            <p>Regras aplicadas por venda: <strong>&lt; R$ 100,00</strong>: 0% | <strong>&lt; R$ 500,00</strong>: 1% | <strong>&ge; R$ 500,00</strong>: 5%</p>
+          </div>
+          <div class="intro-actions">
+            <button class="btn btn-secondary btn-sm" id="btn-toggle-json-vendas">
+              <span>{ } Ver JSON Original</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Raw JSON Viewer (collapsible) -->
+        <div id="json-vendas-container" class="code-collapse hidden">
+          <div class="code-collapse-header">
+            <span>JSON de Vendas Recebido</span>
+            <button class="btn-close-sm" id="btn-close-json-vendas">&times;</button>
+          </div>
+          <pre><code id="json-vendas-code"></code></pre>
+        </div>
+
+        <!-- Metrics Overview -->
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <span class="metric-label">Total em Vendas</span>
+            <span class="metric-value text-accent" id="metric-total-vendas">R$ 0,00</span>
+            <span class="metric-sub" id="metric-qtd-vendas">0 vendas registradas</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">Total de Comissões</span>
+            <span class="metric-value text-emerald" id="metric-total-comissoes">R$ 0,00</span>
+            <span class="metric-sub" id="metric-comissao-percentual">0% do faturamento total</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">Ticket Médio por Venda</span>
+            <span class="metric-value text-primary" id="metric-ticket-medio">R$ 0,00</span>
+            <span class="metric-sub">Média geral da equipe</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">Maior Comissão Individual</span>
+            <span class="metric-value text-amber" id="metric-top-vendedor">-</span>
+            <span class="metric-sub" id="metric-top-valor">Líder em comissão</span>
+          </div>
+        </div>
+
+        <!-- Summary by Salesperson Cards & Table -->
+        <div class="card">
+          <div class="card-header">
+            <h3>Resumo Consolidado por Vendedor</h3>
+            <div class="badge badge-info">4 Vendedores Ativos</div>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table" id="table-comissoes-resumo">
+              <thead>
+                <tr>
+                  <th>Vendedor</th>
+                  <th>Total em Vendas</th>
+                  <th>Qtd. Vendas</th>
+                  <th>Ticket Médio</th>
+                  <th>% Médio Efetivo</th>
+                  <th>Comissão a Pagar</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-comissoes-resumo">
+                <!-- Preenchido via JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Detailed Sales Breakdown -->
+        <div class="card mt-4">
+          <div class="card-header">
+            <div>
+              <h3>Extrato Analítico de Vendas</h3>
+              <p class="card-subtitle">Auditoria individualizada de cada venda e regra de cálculo aplicada</p>
+            </div>
+            <div class="filter-controls">
+              <label for="filtro-vendedor">Filtrar por Vendedor:</label>
+              <select id="filtro-vendedor" class="form-select">
+                <option value="todos">Todos os Vendedores</option>
+              </select>
+            </div>
+          </div>
+          <div class="table-responsive max-h-400">
+            <table class="data-table" id="table-vendas-detalhadas">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Vendedor</th>
+                  <th>Valor da Venda</th>
+                  <th>Faixa de Enquadramento</th>
+                  <th>Alíquota</th>
+                  <th>Comissão Gerada</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-vendas-detalhadas">
+                <!-- Preenchido via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================== -->
+      <!-- TAB 2: MOVIMENTAÇÃO DE ESTOQUE -->
+      <!-- ============================================== -->
+      <section id="tab-estoque" class="tab-panel" role="tabpanel">
+        <div class="section-intro">
+          <div class="intro-text">
+            <h2>Controle e Movimentação de Estoque</h2>
+            <p>Registre entradas e saídas de mercadorias com identificador único e visualize o estoque final atualizado.</p>
+          </div>
+          <div class="intro-actions">
+            <button class="btn btn-secondary btn-sm" id="btn-reset-estoque">
+              <span>↻ Restaurar Estoque Inicial</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Alert Notification for Stock Result -->
+        <div id="estoque-alerta" class="alert-banner hidden">
+          <div class="alert-icon" id="estoque-alerta-icon">✅</div>
+          <div class="alert-content">
+            <strong id="estoque-alerta-titulo">Movimentação Realizada com Sucesso!</strong>
+            <p id="estoque-alerta-mensagem"></p>
+          </div>
+          <button class="alert-close" id="btn-close-alerta-estoque">&times;</button>
+        </div>
+
+        <div class="grid-layout-2-col">
+          <!-- Form to Launch Movement -->
+          <div class="card">
+            <div class="card-header">
+              <h3>Lançar Nova Movimentação</h3>
+              <span class="badge badge-purple">Entrada / Saída</span>
+            </div>
+            <form id="form-movimentacao" class="form-grid">
+              <div class="form-group">
+                <label for="mov-id">Identificador Único (ID): <span class="required">*</span></label>
+                <div class="input-with-action">
+                  <input type="number" id="mov-id" class="form-input" required min="1" placeholder="Ex: 1001">
+                  <button type="button" class="btn btn-secondary btn-xs" id="btn-gerar-id" title="Gerar próximo ID">Auto</button>
+                </div>
+                <small class="form-hint">Cada movimentação deve possuir um ID exclusivo.</small>
+              </div>
+
+              <div class="form-group">
+                <label for="mov-produto">Produto: <span class="required">*</span></label>
+                <select id="mov-produto" class="form-select" required>
+                  <option value="">Selecione um produto...</option>
+                </select>
+                <small class="form-hint" id="hint-estoque-atual">Estoque disponível: -</small>
+              </div>
+
+              <div class="form-group">
+                <label>Tipo de Movimentação: <span class="required">*</span></label>
+                <div class="radio-pill-group">
+                  <label class="radio-pill">
+                    <input type="radio" name="mov-tipo" value="entrada" checked>
+                    <span class="pill-content entry">
+                      <span class="pill-symbol">▲</span> Entrada (+ Estoque)
+                    </span>
+                  </label>
+                  <label class="radio-pill">
+                    <input type="radio" name="mov-tipo" value="saida">
+                    <span class="pill-content exit">
+                      <span class="pill-symbol">▼</span> Saída (- Estoque)
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="mov-quantidade">Quantidade: <span class="required">*</span></label>
+                <input type="number" id="mov-quantidade" class="form-input" min="1" step="1" required placeholder="Ex: 25">
+              </div>
+
+              <div class="form-group form-col-full">
+                <label for="mov-descricao">Descrição da Movimentação: <span class="required">*</span></label>
+                <input type="text" id="mov-descricao" class="form-input" required placeholder="Ex: Compra de reposição de fornecedor, Venda balcão, Devolução...">
+                <small class="form-hint">Descreva a finalidade ou origem/destino da movimentação.</small>
+              </div>
+
+              <div class="form-actions form-col-full">
+                <button type="submit" class="btn btn-primary btn-block" id="btn-submit-movimentacao">
+                  <span>Confirmar e Atualizar Estoque</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Current Stock Levels -->
+          <div class="card">
+            <div class="card-header">
+              <h3>Posição Atual do Depósito</h3>
+              <span class="badge badge-success" id="badge-total-itens">5 Itens</span>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table" id="table-estoque-atual">
+                <thead>
+                  <tr>
+                    <th>Código</th>
+                    <th>Descrição do Produto</th>
+                    <th>Saldo Atual</th>
+                    <th>Nível</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-estoque-atual">
+                  <!-- Preenchido via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Movement History Log Table -->
+        <div class="card mt-4">
+          <div class="card-header">
+            <div>
+              <h3>Histórico de Movimentações Realizadas</h3>
+              <p class="card-subtitle">Auditoria de todas as entradas e saídas com saldo anterior e saldo final</p>
+            </div>
+            <div class="badge badge-neutral" id="badge-total-movimentacoes">0 lançamentos</div>
+          </div>
+          <div class="table-responsive max-h-400">
+            <table class="data-table" id="table-historico-movimentacoes">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Data/Hora</th>
+                  <th>Produto</th>
+                  <th>Tipo</th>
+                  <th>Qtd.</th>
+                  <th>Descrição</th>
+                  <th>Estoque Anterior</th>
+                  <th>Estoque Final</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-historico-movimentacoes">
+                <tr>
+                  <td colspan="8" class="text-center text-muted py-4">Nenhuma movimentação lançada ainda nesta sessão.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================== -->
+      <!-- TAB 3: CÁLCULO DE JUROS POR ATRASO -->
+      <!-- ============================================== -->
+      <section id="tab-juros" class="tab-panel" role="tabpanel">
+        <div class="section-intro">
+          <div class="intro-text">
+            <h2>Cálculo de Juros por Vencimento</h2>
+            <p>Calcula o montante de juros na data de hoje baseado em multa de <strong>2,5% ao dia</strong> sobre o valor do título.</p>
+          </div>
+        </div>
+
+        <div class="grid-layout-2-col">
+          <!-- Input Form -->
+          <div class="card">
+            <div class="card-header">
+              <h3>Parâmetros da Cobrança</h3>
+              <span class="badge badge-amber">Multa: 2,5% ao dia</span>
+            </div>
+            <form id="form-juros" class="form-grid">
+              <div class="form-group form-col-full">
+                <label for="juros-valor">Valor Original do Documento (R$): <span class="required">*</span></label>
+                <div class="input-prefix-wrapper">
+                  <span class="input-prefix">R$</span>
+                  <input type="number" id="juros-valor" class="form-input" min="0.01" step="0.01" value="1000.00" required placeholder="0,00">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="juros-vencimento">Data de Vencimento: <span class="required">*</span></label>
+                <input type="date" id="juros-vencimento" class="form-input" required>
+                <small class="form-hint">Data em que o título deveria ter sido pago.</small>
+              </div>
+
+              <div class="form-group">
+                <label for="juros-data-hoje">Data de Referência (Hoje):</label>
+                <div class="input-with-action">
+                  <input type="date" id="juros-data-hoje" class="form-input" required>
+                  <button type="button" class="btn btn-secondary btn-xs" id="btn-hoje" title="Definir data de hoje">Hoje</button>
+                </div>
+                <small class="form-hint">Data atual do cálculo de liquidação.</small>
+              </div>
+
+              <div class="form-group form-col-full">
+                <label>Simulação Rápida de Cenários:</label>
+                <div class="quick-chips">
+                  <button type="button" class="chip-btn" data-days="0">Hoje (0 dias)</button>
+                  <button type="button" class="chip-btn active" data-days="5">5 dias de atraso</button>
+                  <button type="button" class="chip-btn" data-days="10">10 dias de atraso</button>
+                  <button type="button" class="chip-btn" data-days="15">15 dias de atraso</button>
+                  <button type="button" class="chip-btn" data-days="30">30 dias de atraso</button>
+                </div>
+              </div>
+
+              <div class="form-actions form-col-full">
+                <button type="submit" class="btn btn-primary btn-block">
+                  <span>Calcular Juros e Total Atualizado</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Calculation Result Card -->
+          <div class="card result-card" id="card-resultado-juros">
+            <div class="card-header">
+              <h3>Resultado da Apuração</h3>
+              <span id="badge-status-atraso" class="badge badge-danger">5 Dias de Atraso</span>
+            </div>
+            
+            <div class="result-summary-box">
+              <div class="result-total-label">Valor Total Atualizado</div>
+              <div class="result-total-value" id="res-total-atualizado">R$ 1.125,00</div>
+              <div class="result-formula-tag" id="res-formula-resumo">Valor Original + R$ 125,00 de juros</div>
+            </div>
+
+            <div class="result-breakdown-list">
+              <div class="breakdown-item">
+                <span class="breakdown-label">Valor Original do Título:</span>
+                <span class="breakdown-value" id="res-valor-original">R$ 1.000,00</span>
+              </div>
+              <div class="breakdown-item">
+                <span class="breakdown-label">Data de Vencimento:</span>
+                <span class="breakdown-value" id="res-data-vencimento">-</span>
+              </div>
+              <div class="breakdown-item">
+                <span class="breakdown-label">Data de Liquidação (Hoje):</span>
+                <span class="breakdown-value" id="res-data-hoje">-</span>
+              </div>
+              <div class="breakdown-item">
+                <span class="breakdown-label">Dias Corridos de Atraso:</span>
+                <span class="breakdown-value font-bold" id="res-dias-atraso">5 dias</span>
+              </div>
+              <div class="breakdown-item">
+                <span class="breakdown-label">Taxa Aplicada:</span>
+                <span class="breakdown-value">2,5% ao dia (simples)</span>
+              </div>
+              <div class="breakdown-item highlight-row">
+                <span class="breakdown-label">Total de Juros/Multa Acumulados:</span>
+                <span class="breakdown-value text-danger font-bold" id="res-valor-juros">+ R$ 125,00</span>
+              </div>
+            </div>
+
+            <div class="formula-explanation">
+              <strong>Fórmula do Cálculo:</strong>
+              <code>Juros = Valor × (2,5 / 100) × Dias de Atraso</code>
+              <p id="res-formula-detalhada">R$ 1.000,00 × 0,025 × 5 = R$ 125,00</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <div class="footer-author-box">
+        <div class="footer-author-text">
+          <p>Projeto desenvolvido por <strong>Marcos Feitosa</strong> para resolução técnica dos desafios operacionais.</p>
+          <div class="footer-contacts">
+            <a href="mailto:marcosfanjo@gmail.com" class="footer-contact-item">
+              <span class="contact-icon">📧</span> marcosfanjo@gmail.com
+            </a>
+            <span class="footer-dot">•</span>
+            <a href="https://wa.me/5587999323312" target="_blank" rel="noopener noreferrer" class="footer-contact-item highlight-wa">
+              <span class="contact-icon">📱</span> WhatsApp: (87) 9 9932-3312
+            </a>
+          </div>
+        </div>
+      </div>
+      <p class="footer-copy">Ambiente de Demonstração Localhost | Node.js Vanilla &bull; 2026</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
